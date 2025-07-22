@@ -45,7 +45,7 @@ class HoveringButtons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final paddedChild = Padding(
-      padding: const EdgeInsets.only(bottom: _iconSize + 2),
+      padding: const EdgeInsets.only(bottom: _iconSize + 20),
       child: child,
     );
 
@@ -87,7 +87,7 @@ class HoveringButtons extends StatelessWidget {
                                       ),
                                   child: Icon(
                                     chatStyle.copyButtonStyle!.icon,
-                                    size: 12,
+                                    size: 22,
                                     color: invertColor(
                                       chatStyle.copyButtonStyle!.iconColor,
                                     ),

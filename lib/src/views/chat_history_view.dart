@@ -86,7 +86,7 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
             final isUser = message.origin.isUser;
 
             return Padding(
-              padding: const EdgeInsets.only(top: 6),
+              padding: const EdgeInsets.only(top: 15),
               child:
                   isUser
                       ? UserMessageView(
