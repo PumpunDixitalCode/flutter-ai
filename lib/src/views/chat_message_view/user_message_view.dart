@@ -59,7 +59,7 @@ class UserMessageView extends StatelessWidget {
           return Align(
             alignment: Alignment.topRight,
             child: Padding(
-              padding: const EdgeInsets.only(right: 16),
+              padding: const EdgeInsets.only(right: 16, top: 10),
               child: HoveringButtons(
                 isUserMessage: true,
                 chatStyle: chatStyle,

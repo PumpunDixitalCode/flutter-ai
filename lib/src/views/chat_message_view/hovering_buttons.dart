@@ -51,58 +51,54 @@ class HoveringButtons extends StatelessWidget {
 
     return clipboardText == null
         ? paddedChild
-        : MouseRegion(
-          onEnter: (_) => _hovering.value = true,
-          onExit: (_) => _hovering.value = false,
-          child: Stack(
-            children: [
-              paddedChild,
-              ListenableBuilder(
-                listenable: _hovering,
-                builder:
-                    (context, child) =>
-                        _hovering.value
-                            ? Positioned(
-                              bottom: 0,
-                              right: isUserMessage ? 0 : null,
-                              left: isUserMessage ? null : 32,
-                              child: Row(
-                                spacing: 6,
-                                children: [
-                                  if (onEdit != null)
-                                    GestureDetector(
-                                      onTap: onEdit,
-                                      child: Icon(
-                                        chatStyle.editButtonStyle!.icon,
-                                        size: _iconSize.toDouble(),
-                                        color: invertColor(
-                                          chatStyle.editButtonStyle!.iconColor,
-                                        ),
-                                      ),
-                                    ),
+        : Stack(
+          children: [
+            paddedChild,
+            ListenableBuilder(
+              listenable: _hovering,
+              builder:
+                  (context, child) =>
+                      _hovering.value
+                          ? Positioned(
+                            bottom: 0,
+                            right: isUserMessage ? 0 : null,
+                            left: isUserMessage ? null : 32,
+                            child: Row(
+                              spacing: 6,
+                              children: [
+                                if (onEdit != null)
                                   GestureDetector(
-                                    onTap:
-                                        () => unawaited(
-                                          copyToClipboard(
-                                            context,
-                                            clipboardText!,
-                                          ),
-                                        ),
+                                    onTap: onEdit,
                                     child: Icon(
-                                      chatStyle.copyButtonStyle!.icon,
-                                      size: 12,
+                                      chatStyle.editButtonStyle!.icon,
+                                      size: _iconSize.toDouble(),
                                       color: invertColor(
-                                        chatStyle.copyButtonStyle!.iconColor,
+                                        chatStyle.editButtonStyle!.iconColor,
                                       ),
                                     ),
                                   ),
-                                ],
-                              ),
-                            )
-                            : const SizedBox(),
-              ),
-            ],
-          ),
+                                GestureDetector(
+                                  onTap:
+                                      () => unawaited(
+                                        copyToClipboard(
+                                          context,
+                                          clipboardText!,
+                                        ),
+                                      ),
+                                  child: Icon(
+                                    chatStyle.copyButtonStyle!.icon,
+                                    size: 12,
+                                    color: invertColor(
+                                      chatStyle.copyButtonStyle!.iconColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                          : const SizedBox(),
+            ),
+          ],
         );
   }
 }

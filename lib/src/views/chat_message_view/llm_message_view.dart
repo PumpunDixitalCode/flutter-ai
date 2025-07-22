@@ -62,39 +62,44 @@ class LlmMessageView extends StatelessWidget {
                         ),
                       ),
                     ),
-                    HoveringButtons(
-                      isUserMessage: false,
-                      chatStyle: chatStyle,
-                      clipboardText: text,
-                      child: Container(
-                        decoration: llmStyle.decoration,
-                        margin: const EdgeInsets.only(left: 28),
-                        padding: const EdgeInsets.all(8),
-                        child:
-                            text == null
-                                ? SizedBox(
-                                  width: 32,
-                                  child: JumpingDotsProgressIndicator(
-                                    fontSize: 24,
-                                    color: chatStyle.progressIndicatorColor!,
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: HoveringButtons(
+                        isUserMessage: false,
+                        chatStyle: chatStyle,
+                        clipboardText: text,
+                        child: Container(
+                          decoration: llmStyle.decoration,
+                          margin: const EdgeInsets.only(left: 28),
+                          padding: const EdgeInsets.all(8),
+                          child:
+                              text == null
+                                  ? SizedBox(
+                                    width: 32,
+                                    child: JumpingDotsProgressIndicator(
+                                      fontSize: 24,
+                                      color: chatStyle.progressIndicatorColor!,
+                                    ),
+                                  )
+                                  : AdaptiveCopyText(
+                                    clipboardText: text,
+                                    chatStyle: chatStyle,
+                                    child:
+                                        isWelcomeMessage ||
+                                                viewModel.responseBuilder ==
+                                                    null
+                                            ? MarkdownBody(
+                                              data: text,
+                                              selectable: false,
+                                              styleSheet:
+                                                  llmStyle.markdownStyle,
+                                            )
+                                            : viewModel.responseBuilder!(
+                                              context,
+                                              text,
+                                            ),
                                   ),
-                                )
-                                : AdaptiveCopyText(
-                                  clipboardText: text,
-                                  chatStyle: chatStyle,
-                                  child:
-                                      isWelcomeMessage ||
-                                              viewModel.responseBuilder == null
-                                          ? MarkdownBody(
-                                            data: text,
-                                            selectable: false,
-                                            styleSheet: llmStyle.markdownStyle,
-                                          )
-                                          : viewModel.responseBuilder!(
-                                            context,
-                                            text,
-                                          ),
-                                ),
+                        ),
                       ),
                     ),
                   ],
@@ -104,7 +109,6 @@ class LlmMessageView extends StatelessWidget {
           ],
         ),
       ),
-      const Flexible(flex: 2, child: SizedBox()),
     ],
   );
 }
