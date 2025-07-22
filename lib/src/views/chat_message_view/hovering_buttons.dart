@@ -40,7 +40,7 @@ class HoveringButtons extends StatelessWidget {
   final VoidCallback? onEdit;
 
   static const _iconSize = 16;
-  final _hovering = ValueNotifier(false);
+  final _hovering = ValueNotifier(true);
 
   @override
   Widget build(BuildContext context) {
