@@ -140,18 +140,18 @@ class _ChatPageState extends State<ChatPage> {
       context: context,
       builder:
           (context) => AlertDialog(
-            title: const Text('Clear history?'),
-            actions: [
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Clear'),
-              ),
-              OutlinedButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-            ],
+        title: const Text('Clear history?'),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Clear'),
           ),
+          OutlinedButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
     );
 
     if (ok != true) return;

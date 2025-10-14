@@ -27,6 +27,7 @@ class ChatHistoryView extends StatefulWidget {
   const ChatHistoryView({
     this.onEditMessage,
     required this.onSelectSuggestion,
+    this.onFeedback, // Added for passing feedback callback to LLM messages
     super.key,
   });
 
@@ -41,6 +42,9 @@ class ChatHistoryView extends StatefulWidget {
   /// The callback function to call when a suggestion is selected.
   final void Function(String suggestion) onSelectSuggestion;
 
+  /// The callback invoked when user provides feedback on an LLM message.
+  final Future<void> Function(String? messageText, int messageId, bool like, String? comment)? onFeedback;
+
   @override
   State<ChatHistoryView> createState() => _ChatHistoryViewState();
 }
@@ -54,10 +58,11 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
         final showWelcomeMessage = viewModel.welcomeMessage != null;
         final showSuggestions =
             viewModel.suggestions.isNotEmpty &&
-            viewModel.provider.history.isEmpty;
+                viewModel.provider.history.isEmpty;
         final history = [
           if (showWelcomeMessage)
             ChatMessage(
+              id: 0,
               origin: MessageOrigin.llm,
               text: viewModel.welcomeMessage,
               attachments: [],
@@ -88,18 +93,19 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
             return Padding(
               padding: const EdgeInsets.only(top: 15),
               child:
-                  isUser
-                      ? UserMessageView(
-                        message,
-                        onEdit:
-                            canEdit
-                                ? () => widget.onEditMessage?.call(message)
-                                : null,
-                      )
-                      : LlmMessageView(
-                        message,
-                        isWelcomeMessage: messageIndex == 0,
-                      ),
+              isUser
+                  ? UserMessageView(
+                message,
+                onEdit:
+                canEdit
+                    ? () => widget.onEditMessage?.call(message)
+                    : null,
+              )
+                  : LlmMessageView(
+                message,
+                isWelcomeMessage: messageIndex == 0,
+                onFeedback: widget.onFeedback, // Pass to LLM message view
+              ),
             );
           },
         );

@@ -23,11 +23,7 @@ class ChatMessage {
   /// empty if the message is from an LLM. For user-originated messages, [text]
   /// must not be null or empty. The [attachments] parameter is a list of any
   /// files or media attached to the message.
-  ChatMessage({
-    required this.origin,
-    required this.text,
-    required this.attachments,
-  }) : assert(origin.isUser && text != null && text.isNotEmpty || origin.isLlm);
+  ChatMessage({required this.origin, required this.text, required this.attachments, required this.id}) : assert(origin.isUser && text != null && text.isNotEmpty || origin.isLlm);
 
   /// Converts a JSON map representation to a [ChatMessage].
   ///
@@ -41,20 +37,14 @@ class ChatMessage {
   ///   - 'data': The data of the attachment, either as a base64 encoded string
   ///     (for files) or a URL (for links).
   factory ChatMessage.fromJson(Map<String, dynamic> map) => ChatMessage(
+    id: map['id'] as int,
     origin: MessageOrigin.values.byName(map['origin'] as String),
     text: map['text'] as String,
     attachments: [
       for (final attachment in map['attachments'] as List<dynamic>)
         switch (attachment['type'] as String) {
-          'file' => FileAttachment.fileOrImage(
-            name: attachment['name'] as String,
-            mimeType: attachment['mimeType'] as String,
-            bytes: base64Decode(attachment['data'] as String),
-          ),
-          'link' => LinkAttachment(
-            name: attachment['name'] as String,
-            url: Uri.parse(attachment['data'] as String),
-          ),
+          'file' => FileAttachment.fileOrImage(name: attachment['name'] as String, mimeType: attachment['mimeType'] as String, bytes: base64Decode(attachment['data'] as String)),
+          'link' => LinkAttachment(name: attachment['name'] as String, url: Uri.parse(attachment['data'] as String)),
           _ => throw UnimplementedError(),
         },
     ],
@@ -63,20 +53,20 @@ class ChatMessage {
   /// Factory constructor for creating an LLM-originated message.
   ///
   /// Creates a message with an empty text content and no attachments.
-  factory ChatMessage.llm() =>
-      ChatMessage(origin: MessageOrigin.llm, text: null, attachments: []);
+  factory ChatMessage.llm({int id = -1}) =>
+      ChatMessage(id: id, origin: MessageOrigin.llm, text: null, attachments: []);
 
   /// Factory constructor for creating a user-originated message.
   ///
   /// [text] is the content of the user's message.
   /// [attachments] are any files or media the user has attached to the message.
-  factory ChatMessage.user(String text, Iterable<Attachment> attachments) =>
+  factory ChatMessage.user(String text, Iterable<Attachment> attachments, {int id = -1}) =>
       ChatMessage(
+        id: id,
         origin: MessageOrigin.user,
         text: text,
         attachments: attachments,
       );
-
   /// Text content of the message.
   String? text;
 
@@ -85,6 +75,8 @@ class ChatMessage {
 
   /// Any attachments associated with the message.
   final Iterable<Attachment> attachments;
+
+  final int id;
 
   /// Appends additional text to the existing message content.
   ///

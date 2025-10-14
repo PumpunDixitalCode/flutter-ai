@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // For clipboard if needed
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 import '../../chat_view_model/chat_view_model_client.dart';
@@ -21,16 +22,20 @@ class LlmMessageView extends StatelessWidget {
   /// The [message] parameter is required and represents the LLM chat message to
   /// be displayed.
   const LlmMessageView(
-    this.message, {
-    this.isWelcomeMessage = false,
-    super.key,
-  });
+      this.message, {
+        this.isWelcomeMessage = false,
+        this.onFeedback, // Added for feedback callback
+        super.key,
+      });
 
   /// The LLM chat message to be displayed.
   final ChatMessage message;
 
   /// Whether the message is the welcome message.
   final bool isWelcomeMessage;
+
+  /// The callback invoked when user provides feedback on this LLM message.
+  final Future<void> Function(String? messageText, int messageId, bool like, String? comment)? onFeedback;
 
   @override
   Widget build(BuildContext context) => Row(
@@ -66,35 +71,38 @@ class LlmMessageView extends StatelessWidget {
                       isUserMessage: false,
                       chatStyle: chatStyle,
                       clipboardText: text,
+                      onFeedback: onFeedback, // Pass feedback callback
+                      messageId: message.id, // Assume ChatMessage has int? id; set uniquely in provider
+                      messageText: message.text,
                       child: Container(
                         decoration: llmStyle.decoration,
                         margin: const EdgeInsets.only(left: 28),
                         padding: const EdgeInsets.all(8),
                         child:
-                            text == null
-                                ? SizedBox(
-                                  width: 32,
-                                  child: JumpingDotsProgressIndicator(
-                                    fontSize: 24,
-                                    color: chatStyle.progressIndicatorColor!,
-                                  ),
-                                )
-                                : AdaptiveCopyText(
-                                  clipboardText: text,
-                                  chatStyle: chatStyle,
-                                  child:
-                                      isWelcomeMessage ||
-                                              viewModel.responseBuilder == null
-                                          ? MarkdownBody(
-                                            data: text,
-                                            selectable: false,
-                                            styleSheet: llmStyle.markdownStyle,
-                                          )
-                                          : viewModel.responseBuilder!(
-                                            context,
-                                            text,
-                                          ),
-                                ),
+                        text == null
+                            ? SizedBox(
+                          width: 32,
+                          child: JumpingDotsProgressIndicator(
+                            fontSize: 24,
+                            color: chatStyle.progressIndicatorColor!,
+                          ),
+                        )
+                            : AdaptiveCopyText(
+                          clipboardText: text,
+                          chatStyle: chatStyle,
+                          child:
+                          isWelcomeMessage ||
+                              viewModel.responseBuilder == null
+                              ? MarkdownBody(
+                            data: text,
+                            selectable: false,
+                            styleSheet: llmStyle.markdownStyle,
+                          )
+                              : viewModel.responseBuilder!(
+                            context,
+                            text,
+                          ),
+                        ),
                       ),
                     ),
                   ],

@@ -29,6 +29,8 @@ abstract class LlmProvider implements Listenable {
     Iterable<Attachment> attachments,
   });
 
+  int _tempIdCounter = -1;
+
   /// Generates a stream of text based on the given prompt and attachments.
   /// Interacts with a chat and builds on the history of the chat associated
   /// with the provider.

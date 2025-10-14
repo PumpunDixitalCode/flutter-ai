@@ -5,7 +5,8 @@
 import 'dart:async';
 
 import 'package:cross_file/cross_file.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // For clipboard if not already imported
 
 import '../../chat_view_model/chat_view_model.dart';
 import '../../chat_view_model/chat_view_model_provider.dart';
@@ -33,6 +34,9 @@ import 'llm_response.dart';
 /// ```dart
 /// LlmChatView(
 ///   provider: MyLlmProvider(),
+///   onFeedback: (messageId, like, comment) {
+///     // Handle feedback POST request here or delegate to parent
+///   },
 ///   style: LlmChatViewStyle(
 ///     backgroundColor: Colors.white,
 ///     // ... other style properties
@@ -70,8 +74,11 @@ class LlmChatView extends StatefulWidget {
   /// - [onErrorCallback]: Optional. The action to perform when an
   ///   error occurs during a chat operation. By default, an alert dialog is
   ///   displayed with the error message.
-  /// - [cancelMessage]: Optional. The message to display when the user cancels
-  ///   a chat operation. Defaults to 'CANCEL'.
+  /// - [onFeedback]: Optional. The callback invoked when user provides feedback
+  ///   (like/dislike) on an LLM message. Receives message ID, boolean for like
+  ///   (true) or dislike (false), and optional comment for dislikes.
+  /// - [cancelMessage]: Optional. The message to display when the user cancels a
+  ///   chat operation. Defaults to 'CANCEL'.
   /// - [errorMessage]: Optional. The message to display when an error occurs
   ///   during a chat operation. Defaults to 'ERROR'.
   /// - [enableAttachments]: Optional. Whether to enable file and image attachments in the chat input.
@@ -86,6 +93,7 @@ class LlmChatView extends StatefulWidget {
     String? welcomeMessage,
     this.onCancelCallback,
     this.onErrorCallback,
+    this.onFeedback,
     this.cancelMessage = 'CANCEL',
     this.errorMessage = 'ERROR',
     this.enableAttachments = true,
@@ -93,16 +101,16 @@ class LlmChatView extends StatefulWidget {
     this.autofocus,
     super.key,
   }) : viewModel = ChatViewModel(
-         provider: provider,
-         responseBuilder: responseBuilder,
-         messageSender: messageSender,
-         speechToText: speechToText,
-         style: style,
-         suggestions: suggestions,
-         welcomeMessage: welcomeMessage,
-         enableAttachments: enableAttachments,
-         enableVoiceNotes: enableVoiceNotes,
-       );
+    provider: provider,
+    responseBuilder: responseBuilder,
+    messageSender: messageSender,
+    speechToText: speechToText,
+    style: style,
+    suggestions: suggestions,
+    welcomeMessage: welcomeMessage,
+    enableAttachments: enableAttachments,
+    enableVoiceNotes: enableVoiceNotes,
+  );
 
   /// Whether to enable file and image attachments in the chat input.
   ///
@@ -133,6 +141,11 @@ class LlmChatView extends StatefulWidget {
   /// By default, an alert dialog is displayed with the error message.
   final void Function(BuildContext context, LlmException error)?
   onErrorCallback;
+
+  /// The callback invoked when user provides feedback (like/dislike) on an LLM message.
+  ///
+  /// Receives message ID, boolean for like (true) or dislike (false), and optional comment for dislikes.
+  final Future<void> Function(String? messageText, int messageId, bool like, String? comment)? onFeedback;
 
   /// The text message to display when the user cancels a chat operation.
   ///
@@ -186,67 +199,68 @@ class _LlmChatViewState extends State<LlmChatView>
       listenable: widget.viewModel.provider,
       builder:
           (context, child) => ChatViewModelProvider(
-            viewModel: widget.viewModel,
-            child: GestureDetector(
-              onTap: () {
-                // Dismiss keyboard when tapping anywhere in the view
-                FocusScope.of(context).unfocus();
-              },
-              child: Container(
-                color: chatStyle.backgroundColor,
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: Stack(
-                        children: [
-                          ChatHistoryView(
-                            // can only edit if we're not waiting on the LLM or if
-                            // we're not already editing an LLM response
-                            onEditMessage:
-                                _pendingPromptResponse == null &&
-                                        _associatedResponse == null
-                                    ? _onEditMessage
-                                    : null,
-                            onSelectSuggestion: _onSelectSuggestion,
-                          ),
-                        ],
+        viewModel: widget.viewModel,
+        child: GestureDetector(
+          onTap: () {
+            // Dismiss keyboard when tapping anywhere in the view
+            FocusScope.of(context).unfocus();
+          },
+          child: Container(
+            color: chatStyle.backgroundColor,
+            child: Column(
+              children: [
+                Expanded(
+                  child: Stack(
+                    children: [
+                      ChatHistoryView(
+                        // can only edit if we're not waiting on the LLM or if
+                        // we're not already editing an LLM response
+                        onEditMessage:
+                        _pendingPromptResponse == null &&
+                            _associatedResponse == null
+                            ? _onEditMessage
+                            : null,
+                        onSelectSuggestion: _onSelectSuggestion,
+                        onFeedback: widget.onFeedback, // Pass feedback callback down
                       ),
-                    ),
-                    ChatInput(
-                      initialMessage: _initialMessage,
-                      autofocus:
-                          widget.autofocus ??
-                          widget.viewModel.suggestions.isEmpty,
-                      onCancelEdit:
-                          _associatedResponse != null ? _onCancelEdit : null,
-                      onSendMessage: _onSendMessage,
-                      onCancelMessage:
-                          _pendingPromptResponse == null
-                              ? null
-                              : _onCancelMessage,
-                      onTranslateStt: _onTranslateStt,
-                      onCancelStt:
-                          _pendingSttResponse == null ? null : _onCancelStt,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+                ChatInput(
+                  initialMessage: _initialMessage,
+                  autofocus:
+                  widget.autofocus ??
+                      widget.viewModel.suggestions.isEmpty,
+                  onCancelEdit:
+                  _associatedResponse != null ? _onCancelEdit : null,
+                  onSendMessage: _onSendMessage,
+                  onCancelMessage:
+                  _pendingPromptResponse == null
+                      ? null
+                      : _onCancelMessage,
+                  onTranslateStt: _onTranslateStt,
+                  onCancelStt:
+                  _pendingSttResponse == null ? null : _onCancelStt,
+                ),
+              ],
             ),
           ),
+        ),
+      ),
     );
   }
 
   Future<void> _onSendMessage(
-    String prompt,
-    Iterable<Attachment> attachments,
-  ) async {
+      String prompt,
+      Iterable<Attachment> attachments,
+      ) async {
     _initialMessage = null;
     _associatedResponse = null;
 
     // check the viewmodel for a user-provided message sender to use instead
     final sendMessageStream =
         widget.viewModel.messageSender ??
-        widget.viewModel.provider.sendMessageStream;
+            widget.viewModel.provider.sendMessageStream;
 
     _pendingPromptResponse = LlmResponse(
       stream: sendMessageStream(prompt, attachments: attachments),
@@ -290,9 +304,9 @@ class _LlmChatViewState extends State<LlmChatView>
   }
 
   Future<void> _onTranslateStt(
-    XFile file,
-    Iterable<Attachment> currentAttachments,
-  ) async {
+      XFile file,
+      Iterable<Attachment> currentAttachments,
+      ) async {
     assert(widget.enableVoiceNotes);
     _initialMessage = null;
     _associatedResponse = null;
@@ -300,16 +314,16 @@ class _LlmChatViewState extends State<LlmChatView>
     final response = StringBuffer();
     _pendingSttResponse = LlmResponse(
       stream:
-          widget.viewModel.speechToText?.call(file) ??
+      widget.viewModel.speechToText?.call(file) ??
           _convertSpeechToText(file),
       onUpdate: (text) => response.write(text),
       onDone:
           (error) async => _onSttDone(
-            error,
-            response.toString().trim(),
-            file,
-            currentAttachments,
-          ),
+        error,
+        response.toString().trim(),
+        file,
+        currentAttachments,
+      ),
     );
 
     setState(() {});
@@ -331,11 +345,11 @@ class _LlmChatViewState extends State<LlmChatView>
   }
 
   Future<void> _onSttDone(
-    LlmException? error,
-    String response,
-    XFile file,
-    Iterable<Attachment> attachments,
-  ) async {
+      LlmException? error,
+      String response,
+      XFile file,
+      Iterable<Attachment> attachments,
+      ) async {
     assert(_pendingSttResponse != null);
     setState(() {
       // Preserve any existing attachments from the current input
