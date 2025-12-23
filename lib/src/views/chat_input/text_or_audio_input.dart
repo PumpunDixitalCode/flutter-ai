@@ -3,7 +3,6 @@ import 'package:flutter/widgets.dart';
 import 'package:waveform_recorder/waveform_recorder.dart';
 
 import '../../styles/styles.dart';
-import '../../utility.dart';
 import '../chat_text_field.dart';
 import 'editing_indicator.dart';
 import 'input_state.dart';
@@ -65,19 +64,11 @@ class TextOrAudioInput extends StatelessWidget {
   Widget build(BuildContext context) => Stack(
     children: [
       Padding(
-        padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          top: _onCancelEdit != null ? 24 : 8,
-          bottom: 8,
-        ),
+        padding: EdgeInsets.only(left: 16, right: 16, top: _onCancelEdit != null ? 24 : 8, bottom: 8),
         child: DecoratedBox(
           decoration: _inputStyle.decoration!,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              minHeight: _minInputHeight,
-              maxHeight: _maxInputHeight,
-            ),
+            constraints: const BoxConstraints(minHeight: _minInputHeight, maxHeight: _maxInputHeight),
             child:
                 _waveController.isRecording
                     ? WaveformRecorder(
@@ -85,26 +76,45 @@ class TextOrAudioInput extends StatelessWidget {
                       height: _minInputHeight,
                       onRecordingStopped: _onRecordingStopped,
                     )
-                    : ChatTextField(
-                      minLines: 1,
-                      maxLines: 1024,
-                      controller: _textController,
-                      autofocus: _autofocus,
-                      focusNode: _focusNode,
-                      textInputAction:
-                          isMobile
-                              ? TextInputAction.newline
-                              : TextInputAction.done,
-                      onSubmitted:
-                          _inputState == InputState.canSubmitPrompt
-                              ? (_) => _onSubmitPrompt()
-                              : (_) => _focusNode.requestFocus(),
-                      style: _inputStyle.textStyle!,
-                      hintText: _inputStyle.hintText!,
-                      hintStyle: _inputStyle.hintStyle!,
-                      hintPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
+                    : Focus(
+                      onKeyEvent: (node, event) {
+                        // Solo manejar eventos de tecla presionada
+                        if (event is! KeyDownEvent) {
+                          return KeyEventResult.ignored;
+                        }
+
+                        // Detectar si Shift está presionado
+                        final isShiftPressed =
+                            HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.shiftLeft) ||
+                            HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.shiftRight);
+
+                        // Si es Enter y Shift está presionado, ignorar para permitir salto de línea
+                        if (event.logicalKey == LogicalKeyboardKey.enter && isShiftPressed) {
+                          return KeyEventResult.ignored;
+                        }
+
+                        // Si es Enter sin Shift y puede enviar, enviar el prompt
+                        if (event.logicalKey == LogicalKeyboardKey.enter &&
+                            !isShiftPressed &&
+                            _inputState == InputState.canSubmitPrompt) {
+                          _onSubmitPrompt();
+                          return KeyEventResult.handled;
+                        }
+
+                        return KeyEventResult.ignored;
+                      },
+                      child: ChatTextField(
+                        minLines: 1,
+                        maxLines: 1024,
+                        controller: _textController,
+                        autofocus: _autofocus,
+                        focusNode: _focusNode,
+                        textInputAction: TextInputAction.newline,
+                        onSubmitted: (_) => _focusNode.requestFocus(),
+                        style: _inputStyle.textStyle!,
+                        hintText: _inputStyle.hintText!,
+                        hintStyle: _inputStyle.hintStyle!,
+                        hintPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
                     ),
           ),
@@ -114,10 +124,7 @@ class TextOrAudioInput extends StatelessWidget {
         alignment: Alignment.topRight,
         child:
             _onCancelEdit != null
-                ? EditingIndicator(
-                  onCancelEdit: _onCancelEdit,
-                  cancelButtonStyle: _cancelButtonStyle,
-                )
+                ? EditingIndicator(onCancelEdit: _onCancelEdit, cancelButtonStyle: _cancelButtonStyle)
                 : const SizedBox(),
       ),
     ],
