@@ -38,20 +38,143 @@ bool isCupertinoApp(BuildContext context) {
 ///   `false` otherwise.
 final isMobile = UniversalPlatform.isAndroid || UniversalPlatform.isIOS;
 
+/// Removes Markdown formatting from text.
+///
+/// This function strips common Markdown syntax including:
+/// * Headers (#, ##, ###, etc.)
+/// * Bold (**text** or __text__)
+/// * Italic (*text* or _text_)
+/// * Strikethrough (~~text~~)
+/// * Code blocks (```code```)
+/// * Inline code (`code`)
+/// * Links ([text](url))
+/// * Images (![alt](url))
+/// * Blockquotes (>)
+/// * Horizontal rules (---, ___, ***)
+/// * Lists (-, *, +, 1.)
+/// * Tables (converts to plain text format)
+///
+/// Parameters:
+///   * [text]: The Markdown-formatted text to clean.
+///
+/// Returns: The text with all Markdown formatting removed.
+String stripMarkdown(String text) {
+  String cleaned = text;
+
+  // Convert tables to plain text format
+  cleaned = _convertTablesToPlainText(cleaned);
+
+  // Remove code blocks (```)
+  cleaned = cleaned.replaceAll(RegExp(r'```[\s\S]*?```'), '');
+
+  // Remove inline code (`)
+  cleaned = cleaned.replaceAllMapped(RegExp(r'`([^`]+)`'), (match) => match.group(1)!);
+
+  // Remove images ![alt](url)
+  cleaned = cleaned.replaceAllMapped(RegExp(r'!\[([^\]]*)\]\([^\)]+\)'), (match) => match.group(1)!);
+
+  // Remove links [text](url)
+  cleaned = cleaned.replaceAllMapped(RegExp(r'\[([^\]]+)\]\([^\)]+\)'), (match) => match.group(1)!);
+
+  // Remove bold (**text** or __text__)
+  cleaned = cleaned.replaceAllMapped(RegExp(r'\*\*([^\*]+?)\*\*'), (match) => match.group(1)!);
+  cleaned = cleaned.replaceAllMapped(RegExp(r'__([^_]+?)__'), (match) => match.group(1)!);
+
+  // Remove italic (*text* or _text_)
+  cleaned = cleaned.replaceAllMapped(RegExp(r'(?<!\*)\*(?!\*)([^\*]+?)(?<!\*)\*(?!\*)'), (match) => match.group(1)!);
+  cleaned = cleaned.replaceAllMapped(RegExp(r'(?<!_)_(?!_)([^_]+?)(?<!_)_(?!_)'), (match) => match.group(1)!);
+
+  // Remove strikethrough (~~text~~)
+  cleaned = cleaned.replaceAllMapped(RegExp(r'~~([^~]+?)~~'), (match) => match.group(1)!);
+
+  // Remove headers (# ## ### etc.)
+  cleaned = cleaned.replaceAll(RegExp(r'^#{1,6}\s+', multiLine: true), '');
+
+  // Remove blockquotes (>)
+  cleaned = cleaned.replaceAll(RegExp(r'^>\s+', multiLine: true), '');
+
+  // Remove horizontal rules (---, ___, ***)
+  cleaned = cleaned.replaceAll(RegExp(r'^[\-_\*]{3,}$', multiLine: true), '');
+
+  // Remove unordered list markers (-, *, +)
+  cleaned = cleaned.replaceAll(RegExp(r'^[\-\*\+]\s+', multiLine: true), '');
+
+  // Remove ordered list markers (1., 2., etc.)
+  cleaned = cleaned.replaceAll(RegExp(r'^\d+\.\s+', multiLine: true), '');
+
+  return cleaned.trim();
+}
+
+/// Converts Markdown tables to a plain text format.
+String _convertTablesToPlainText(String text) {
+  final lines = text.split('\n');
+  final buffer = StringBuffer();
+  bool inTable = false;
+  List<String>? headers;
+
+  for (int i = 0; i < lines.length; i++) {
+    final line = lines[i].trim();
+
+    // Detect table header row (contains |)
+    if (line.startsWith('|') && line.endsWith('|')) {
+      if (!inTable) {
+        // First row is the header
+        inTable = true;
+        headers = line
+            .split('|')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
+        continue;
+      } else if (i > 0 && lines[i - 1].contains('|') && line.contains('---')) {
+        // This is the separator line (|---|---|), skip it
+        continue;
+      } else {
+        // This is a data row
+        final cells = line
+            .split('|')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
+
+        if (headers != null && cells.length == headers.length) {
+          for (int j = 0; j < cells.length; j++) {
+            buffer.write('${headers[j]}: ${cells[j]}');
+            if (j < cells.length - 1) buffer.write(', ');
+          }
+          buffer.writeln();
+        }
+        continue;
+      }
+    } else {
+      // Not a table row
+      if (inTable) {
+        inTable = false;
+        headers = null;
+        buffer.writeln(); // Add blank line after table
+      }
+      buffer.writeln(line);
+    }
+  }
+
+  return buffer.toString();
+}
+
 /// Copies the given text to the clipboard and shows a confirmation message.
 ///
-/// This function uses the [Clipboard] API to copy the provided [text] to the
-/// system clipboard. After copying, it displays a confirmation message using
-/// [AdaptiveSnackBar] if the [context] is still mounted.
+/// This function removes Markdown formatting from the text before copying it
+/// to the clipboard using the [Clipboard] API. After copying, it displays a
+/// confirmation message using [AdaptiveSnackBar] if the [context] is still mounted.
 ///
 /// Parameters:
 ///   * [context]: The [BuildContext] used to show the confirmation message.
-///   * [text]: The text to be copied to the clipboard.
+///   * [text]: The text to be copied to the clipboard (may contain Markdown).
 ///
 /// Returns: A [Future] that completes when the text has been copied to the
 ///   clipboard and the confirmation message has been shown.
 Future<void> copyToClipboard(BuildContext context, String text) async {
-  await Clipboard.setData(ClipboardData(text: text));
+  final cleanedText = stripMarkdown(text);
+  await Clipboard.setData(ClipboardData(text: cleanedText));
   if (context.mounted) {
     AdaptiveSnackBar.show(context, 'Message copied to clipboard');
   }
@@ -69,9 +192,9 @@ Future<void> copyToClipboard(BuildContext context, String text) async {
 Color? invertColor(Color? color) =>
     color != null
         ? Color.from(
-          alpha: color.a,
-          red: 1 - color.r,
-          green: 1 - color.g,
-          blue: 1 - color.b,
-        )
+      alpha: color.a,
+      red: 1 - color.r,
+      green: 1 - color.g,
+      blue: 1 - color.b,
+    )
         : null;
