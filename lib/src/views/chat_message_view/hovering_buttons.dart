@@ -6,11 +6,8 @@ import 'dart:async';
 
 import 'package:delayed_display/delayed_display.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // For clipboard
-import 'package:flutter/widgets.dart';
 import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
 
-import '../../styles/llm_chat_view_style.dart';
 import '../../utility.dart';
 
 /// A widget that displays hovering buttons for editing, copying, and feedback.
@@ -60,7 +57,6 @@ class HoveringButtons extends StatefulWidget {
 
   final String? messageText;
 
-
   final _hovering = ValueNotifier(true);
 
   @override
@@ -71,6 +67,8 @@ class _HoveringButtonsState extends State<HoveringButtons> {
   bool hasLiked = false; // Track if liked
   bool hasDisliked = false; // Track if disliked
   bool showCommentInput = false; // Track if comment input is shown
+  bool isLoadingLike = false; // Track if like button is loading
+  bool isLoadingDislike = false; // Track if dislike button is loading
   late final TextEditingController _commentController; // Controller for comment input
 
   @override
@@ -85,7 +83,7 @@ class _HoveringButtonsState extends State<HoveringButtons> {
     super.dispose();
   }
 
-  static const _iconSize = 16;
+  static const _iconSize = 24.0; // Increased from 16
 
   @override
   Widget build(BuildContext context) {
@@ -94,131 +92,122 @@ class _HoveringButtonsState extends State<HoveringButtons> {
     final extraPaddingForComment = showCommentInput ? 60.0 : 0.0; // Extra padding for wide comment input
     final totalBottomPadding = hoverButtonPadding + extraPaddingForComment;
 
-    final paddedChild = Padding(
-      padding: EdgeInsets.only(bottom: totalBottomPadding),
-      child: widget.child,
-    );
+    final paddedChild = Padding(padding: EdgeInsets.only(bottom: totalBottomPadding), child: widget.child);
 
     return widget.clipboardText == null
         ? paddedChild
         : Stack(
-      children: [
-        paddedChild,
-        // Hovering buttons row (always includes feedback if applicable)
-        ListenableBuilder(
-          listenable: widget._hovering,
-          builder: (context, child) => widget._hovering.value
-              ? Positioned(
-            bottom: 0,
-            right: widget.isUserMessage ? 0 : null,
-            left: widget.isUserMessage ? null : 32,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Main buttons row (edit, copy, feedback)
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  spacing: 8,
-                  children: [
-                    // if (widget.onEdit != null)
-                    //   GestureDetector(
-                    //     onTap: widget.onEdit,
-                    //     child: Icon(
-                    //       widget.chatStyle.editButtonStyle!.icon,
-                    //       size: _iconSize.toDouble(),
-                    //       color: invertColor(
-                    //         widget.chatStyle.editButtonStyle!.iconColor,
-                    //       ),
-                    //     ),
-                    //   ),
-                    if (widget.clipboardText != null)
-                      GestureDetector(
-                        onTap: () => unawaited(
-                          copyToClipboard(
-                            context,
-                            widget.clipboardText!,
-                          ),
-                        ),
-                        child: Icon(
-                          widget.chatStyle.copyButtonStyle!.icon,
-                          size: 22,
-                          color: invertColor(
-                            widget.chatStyle.copyButtonStyle!.iconColor,
-                          ),
-                        ),
-                      ),
-                    if (!widget.isUserMessage && widget.onFeedback != null && widget.messageId != null)
-                      _buildFeedbackButtons(),
-                  ],
-                ),
-                // Wide comment input (only if shown)
-                if (showCommentInput)
-                  DelayedDisplay(
-                    slidingBeginOffset: Offset.zero,
-                    fadingDuration: const Duration(milliseconds: 350),
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: SizedBox(
-                        width: MediaQuery.of(context).size.width - 64, // Almost full screen width, minus margins
-                        child: DecoratedBox(
-                          decoration: inputStyle.decoration!,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            child: Row(
+          children: [
+            paddedChild,
+            // Hovering buttons row (always includes feedback if applicable)
+            ListenableBuilder(
+              listenable: widget._hovering,
+              builder:
+                  (context, child) =>
+                      widget._hovering.value
+                          ? Positioned(
+                            bottom: 0,
+                            right: widget.isUserMessage ? 0 : null,
+                            left: widget.isUserMessage ? null : 32,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _commentController,
-                                    decoration: InputDecoration(
-                                      hintText: 'Help us improve...',
-                                      hintStyle: inputStyle.hintStyle,
-                                      border: InputBorder.none,
-                                      isDense: true,
+                                // Main buttons row (edit, copy, feedback)
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  spacing: 8,
+                                  children: [
+                                    // if (widget.onEdit != null)
+                                    //   GestureDetector(
+                                    //     onTap: widget.onEdit,
+                                    //     child: Icon(
+                                    //       widget.chatStyle.editButtonStyle!.icon,
+                                    //       size: _iconSize.toDouble(),
+                                    //       color: invertColor(
+                                    //         widget.chatStyle.editButtonStyle!.iconColor,
+                                    //       ),
+                                    //     ),
+                                    //   ),
+                                    if (widget.clipboardText != null)
+                                      GestureDetector(
+                                        onTap: () => unawaited(copyToClipboard(context, widget.clipboardText!)),
+                                        child: Icon(
+                                          widget.chatStyle.copyButtonStyle!.icon,
+                                          size: 22,
+                                          color: invertColor(widget.chatStyle.copyButtonStyle!.iconColor),
+                                        ),
+                                      ),
+                                    if (!widget.isUserMessage && widget.onFeedback != null && widget.messageId != null)
+                                      _buildFeedbackButtons(),
+                                  ],
+                                ),
+                                // Wide comment input (only if shown)
+                                if (showCommentInput)
+                                  DelayedDisplay(
+                                    slidingBeginOffset: Offset.zero,
+                                    fadingDuration: const Duration(milliseconds: 350),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: SizedBox(
+                                        width:
+                                            MediaQuery.of(context).size.width -
+                                            64, // Almost full screen width, minus margins
+                                        child: DecoratedBox(
+                                          decoration: inputStyle.decoration!,
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                            child: Row(
+                                              children: [
+                                                Expanded(
+                                                  child: TextField(
+                                                    controller: _commentController,
+                                                    decoration: InputDecoration(
+                                                      hintText: 'Help us improve...',
+                                                      hintStyle: inputStyle.hintStyle,
+                                                      border: InputBorder.none,
+                                                      isDense: true,
+                                                    ),
+                                                    style: inputStyle.textStyle,
+                                                    maxLines: 1,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                IconButton(
+                                                  icon: const Icon(Icons.send, size: 20),
+                                                  padding: EdgeInsets.zero,
+                                                  constraints: const BoxConstraints(),
+                                                  onPressed: () async {
+                                                    final commentText = _commentController.text.trim();
+                                                    await widget.onFeedback!(
+                                                      widget.messageText,
+                                                      widget.messageId!,
+                                                      false,
+                                                      commentText.isEmpty ? null : commentText,
+                                                    );
+                                                    if (mounted) {
+                                                      setState(() {
+                                                        hasDisliked = true;
+                                                        showCommentInput = false;
+                                                        _commentController.clear();
+                                                      });
+                                                    }
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                    style: inputStyle.textStyle,
-                                    maxLines: 1,
                                   ),
-                                ),
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  icon: const Icon(Icons.send, size: 20),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(),
-                                  onPressed: () async {
-                                    final commentText = _commentController.text.trim();
-                                    await widget.onFeedback!(
-                                      widget.messageText,
-                                      widget.messageId!,
-                                      false,
-                                      commentText.isEmpty ? null : commentText,
-                                    );
-                                    if (mounted) {
-                                      setState(() {
-                                        hasDisliked = true;
-                                        showCommentInput = false;
-                                        _commentController.clear();
-                                      });
-                                    }
-                                  },
-                                ),
                               ],
                             ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
+                          )
+                          : const SizedBox(),
             ),
-          )
-              : const SizedBox(),
-        ),
-      ],
-    );
+          ],
+        );
   }
 
   /// Builds the feedback buttons (like/dislike) in the same row as copy.
@@ -228,46 +217,98 @@ class _HoveringButtonsState extends State<HoveringButtons> {
       children: [
         // Like button (gray initially, black if selected)
         GestureDetector(
-          onTap: () async {
-            if (mounted) {
-              setState(() {
-                showCommentInput = false;
-                hasLiked = true;
-                hasDisliked = false; // Toggle off dislike if liked
-              });
-            }
-            await widget.onFeedback!(widget.messageText, widget.messageId!, true, null);
-          },
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            child: Icon(
-              Icons.thumb_up,
-              size: _iconSize.toDouble(),
-              color: hasLiked ? Colors.black : Colors.grey[600],
-            ),
-          ),
+          onTap:
+              isLoadingLike || isLoadingDislike
+                  ? null
+                  : () async {
+                    if (mounted) {
+                      setState(() {
+                        isLoadingLike = true;
+                      });
+                    }
+                    try {
+                      await widget.onFeedback!(widget.messageText, widget.messageId!, true, null);
+                      if (mounted) {
+                        setState(() {
+                          showCommentInput = false;
+                          hasLiked = true;
+                          hasDisliked = false; // Toggle off dislike if liked
+                          isLoadingLike = false;
+                        });
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        setState(() {
+                          isLoadingLike = false;
+                        });
+                      }
+                      rethrow;
+                    }
+                  },
+          child:
+              isLoadingLike
+                  ? SizedBox(
+                    width: _iconSize,
+                    height: _iconSize,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.grey[500]!),
+                    ),
+                  )
+                  : Container(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(Icons.thumb_up, size: _iconSize, color: hasLiked ? Colors.black : Colors.grey[500]),
+                  ),
         ),
         const SizedBox(width: 8), // Space between like and dislike
         // Dislike button (gray initially, black if selected)
         GestureDetector(
-          onTap: () async {
-            if (mounted) {
-              setState(() {
-                showCommentInput = true;
-                hasLiked = false;
-                hasDisliked = true;
-              });
-            }
-            await widget.onFeedback!(widget.messageText, widget.messageId!, false, null);
-          },
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            child: Icon(
-              Icons.thumb_down,
-              size: _iconSize.toDouble(),
-              color: hasDisliked ? Colors.black : Colors.grey[600],
-            ),
-          ),
+          onTap:
+              isLoadingLike || isLoadingDislike
+                  ? null
+                  : () async {
+                    if (mounted) {
+                      setState(() {
+                        isLoadingDislike = true;
+                      });
+                    }
+                    try {
+                      await widget.onFeedback!(widget.messageText, widget.messageId!, false, null);
+                      if (mounted) {
+                        setState(() {
+                          showCommentInput = true;
+                          hasLiked = false;
+                          hasDisliked = true;
+                          isLoadingDislike = false;
+                        });
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        setState(() {
+                          isLoadingDislike = false;
+                        });
+                      }
+                      rethrow;
+                    }
+                  },
+          child:
+              isLoadingDislike
+                  ? SizedBox(
+                    width: _iconSize,
+                    height: _iconSize,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.grey[600]!),
+                    ),
+                  )
+                  : Container(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.thumb_down,
+                      size: _iconSize,
+                      color: hasDisliked ? Colors.black : Colors.grey[500],
+                    ),
+                  ),
         ),
       ],
     );
