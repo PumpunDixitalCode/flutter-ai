@@ -43,7 +43,7 @@ class ChatInput extends StatefulWidget {
     this.onTapSuggestedPrompts,
     super.key,
   }) : assert(!(onCancelMessage != null && onCancelStt != null), 'Cannot be submitting a prompt and doing stt at the same time'),
-       assert(!(onCancelEdit != null && initialMessage == null), 'Cannot cancel edit of a message if no initial message is provided');
+        assert(!(onCancelEdit != null && initialMessage == null), 'Cannot cancel edit of a message if no initial message is provided');
 
   /// Callback function triggered when a message is sent.
   ///
@@ -166,56 +166,56 @@ class _ChatInputState extends State<ChatInput> {
           valueListenable: _textController,
           builder:
               (context, value, child) => ListenableBuilder(
-                listenable: _waveController,
-                builder:
-                    (context, child) => Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        // Floating "+" button positioned to the left of the chat input.
-                        widget.onTapSuggestedPrompts == null
-                            ? SizedBox.shrink()
-                            : Container(
-                              padding: const EdgeInsets.only(bottom: 14),
-                              child: InkWell(
-                                onTap: widget.onTapSuggestedPrompts,
-                                borderRadius: BorderRadius.circular(20),
-                                child: Container(
-                                  width: 38,
-                                  height: 38,
-                                  decoration: BoxDecoration(color: Colors.grey.shade300, shape: BoxShape.circle),
-                                  child: const Icon(Icons.add, color: Colors.black, size: 20),
-                                ),
-                              ),
-                            ),
-                        if (_viewModel!.enableAttachments) Padding(padding: const EdgeInsets.only(bottom: 14), child: AttachmentActionBar(onAttachments: onAttachments)),
-                        Expanded(
-                          child: TextOrAudioInput(
-                            inputStyle: _inputStyle!,
-                            waveController: _waveController,
-                            onCancelEdit: widget.onCancelEdit,
-                            onRecordingStopped: onRecordingStopped,
-                            onSubmitPrompt: onSubmitPrompt,
-                            textController: _textController,
-                            focusNode: _focusNode,
-                            autofocus: widget.autofocus,
-                            inputState: _inputState,
-                            cancelButtonStyle: _chatStyle!.cancelButtonStyle!,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 14),
-                          child: InputButton(
-                            inputState: _inputState,
-                            chatStyle: _chatStyle!,
-                            onSubmitPrompt: onSubmitPrompt,
-                            onCancelPrompt: onCancelPrompt,
-                            onStartRecording: onStartRecording,
-                            onStopRecording: onStopRecording,
-                          ),
-                        ),
-                      ],
+            listenable: _waveController,
+            builder:
+                (context, child) => Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                // Floating "+" button positioned to the left of the chat input.
+                widget.onTapSuggestedPrompts == null
+                    ? SizedBox.shrink()
+                    : Container(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: InkWell(
+                    onTap: widget.onTapSuggestedPrompts,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(color: Colors.grey.shade300, shape: BoxShape.circle),
+                      child: const Icon(Icons.add, color: Colors.black, size: 20),
                     ),
-              ),
+                  ),
+                ),
+                if (_viewModel!.enableAttachments) Padding(padding: const EdgeInsets.only(bottom: 14), child: AttachmentActionBar(onAttachments: onAttachments)),
+                Expanded(
+                  child: TextOrAudioInput(
+                    inputStyle: _inputStyle!,
+                    waveController: _waveController,
+                    onCancelEdit: widget.onCancelEdit,
+                    onRecordingStopped: onRecordingStopped,
+                    onSubmitPrompt: onSubmitPrompt,
+                    textController: _textController,
+                    focusNode: _focusNode,
+                    autofocus: widget.autofocus,
+                    inputState: _inputState,
+                    cancelButtonStyle: _chatStyle!.cancelButtonStyle!,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: InputButton(
+                    inputState: _inputState,
+                    chatStyle: _chatStyle!,
+                    onSubmitPrompt: onSubmitPrompt,
+                    onCancelPrompt: onCancelPrompt,
+                    onStartRecording: onStartRecording,
+                    onStopRecording: onStopRecording,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     ),
