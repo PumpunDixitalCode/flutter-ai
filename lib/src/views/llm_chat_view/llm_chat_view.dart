@@ -5,6 +5,7 @@
 import 'dart:async';
 
 import 'package:cross_file/cross_file.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // For clipboard if not already imported
 
@@ -99,6 +100,7 @@ class LlmChatView extends StatefulWidget {
     this.enableAttachments = true,
     this.enableVoiceNotes = true,
     this.autofocus,
+    this.onTapSuggestedPrompts ,
     super.key,
   }) : viewModel = ChatViewModel(
     provider: provider,
@@ -164,6 +166,8 @@ class LlmChatView extends StatefulWidget {
   /// will be focused automatically.
   final bool? autofocus;
 
+  final AsyncCallback? onTapSuggestedPrompts;
+
   @override
   State<LlmChatView> createState() => _LlmChatViewState();
 }
@@ -227,6 +231,7 @@ class _LlmChatViewState extends State<LlmChatView>
                   ),
                 ),
                 ChatInput(
+                  onTapSuggestedPrompts: widget.onTapSuggestedPrompts ,
                   initialMessage: _initialMessage,
                   autofocus:
                   widget.autofocus ??

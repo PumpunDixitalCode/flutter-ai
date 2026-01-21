@@ -3,7 +3,8 @@
 // found in the LICENSE file.
 
 import 'package:file_selector/file_selector.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:waveform_recorder/waveform_recorder.dart';
 
@@ -39,15 +40,10 @@ class ChatInput extends StatefulWidget {
     this.onCancelMessage,
     this.onCancelStt,
     this.autofocus = true,
+    this.onTapSuggestedPrompts,
     super.key,
-  }) : assert(
-         !(onCancelMessage != null && onCancelStt != null),
-         'Cannot be submitting a prompt and doing stt at the same time',
-       ),
-       assert(
-         !(onCancelEdit != null && initialMessage == null),
-         'Cannot cancel edit of a message if no initial message is provided',
-       );
+  }) : assert(!(onCancelMessage != null && onCancelStt != null), 'Cannot be submitting a prompt and doing stt at the same time'),
+       assert(!(onCancelEdit != null && initialMessage == null), 'Cannot cancel edit of a message if no initial message is provided');
 
   /// Callback function triggered when a message is sent.
   ///
@@ -59,8 +55,7 @@ class ChatInput extends StatefulWidget {
   ///
   /// Takes an [XFile] representing the audio file to be translated and the
   /// current attachments.
-  final void Function(XFile file, Iterable<Attachment> attachments)
-  onTranslateStt;
+  final void Function(XFile file, Iterable<Attachment> attachments) onTranslateStt;
 
   /// The initial message to populate the input field, if any.
   final ChatMessage? initialMessage;
@@ -80,6 +75,10 @@ class ChatInput extends StatefulWidget {
 
   /// Whether the input should automatically focus
   final bool autofocus;
+
+  /// Optional suggested prompts provided by the parent UI. The type is dynamic
+  /// so host apps can pass either Strings or domain objects.
+  final AsyncCallback? onTapSuggestedPrompts;
 
   @override
   State<ChatInput> createState() => _ChatInputState();
@@ -161,10 +160,7 @@ class _ChatInputState extends State<ChatInput> {
     padding: const EdgeInsets.all(16),
     child: Column(
       children: [
-        AttachmentsView(
-          attachments: _attachments,
-          onRemove: onRemoveAttachment,
-        ),
+        AttachmentsView(attachments: _attachments, onRemove: onRemoveAttachment),
         if (_attachments.isNotEmpty) const SizedBox(height: 6),
         ValueListenableBuilder(
           valueListenable: _textController,
@@ -175,13 +171,23 @@ class _ChatInputState extends State<ChatInput> {
                     (context, child) => Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        if (_viewModel!.enableAttachments)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 14),
-                            child: AttachmentActionBar(
-                              onAttachments: onAttachments,
+                        // Floating "+" button positioned to the left of the chat input.
+                        widget.onTapSuggestedPrompts == null
+                            ? SizedBox.shrink()
+                            : Container(
+                              padding: const EdgeInsets.only(bottom: 14),
+                              child: InkWell(
+                                onTap: widget.onTapSuggestedPrompts,
+                                borderRadius: BorderRadius.circular(20),
+                                child: Container(
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(color: Colors.grey.shade300, shape: BoxShape.circle),
+                                  child: const Icon(Icons.add, color: Colors.black, size: 20),
+                                ),
+                              ),
                             ),
-                          ),
+                        if (_viewModel!.enableAttachments) Padding(padding: const EdgeInsets.only(bottom: 14), child: AttachmentActionBar(onAttachments: onAttachments)),
                         Expanded(
                           child: TextOrAudioInput(
                             inputStyle: _inputStyle!,
@@ -220,9 +226,7 @@ class _ChatInputState extends State<ChatInput> {
     if (widget.onCancelMessage != null) return InputState.canCancelPrompt;
     if (widget.onCancelStt != null) return InputState.canCancelStt;
     if (_textController.text.trim().isEmpty) {
-      return _viewModel!.enableVoiceNotes
-          ? InputState.canStt
-          : InputState.disabled;
+      return _viewModel!.enableVoiceNotes ? InputState.canStt : InputState.disabled;
     }
     return InputState.canSubmitPrompt;
   }
@@ -271,6 +275,5 @@ class _ChatInputState extends State<ChatInput> {
     setState(() => _attachments.addAll(attachments));
   }
 
-  void onRemoveAttachment(Attachment attachment) =>
-      setState(() => _attachments.remove(attachment));
+  void onRemoveAttachment(Attachment attachment) => setState(() => _attachments.remove(attachment));
 }
