@@ -33,7 +33,7 @@ class InputButton extends StatelessWidget {
   });
 
   /// The current state of the input.
-  final InputState inputState;
+  final InputState? inputState;
 
   /// The style configuration for the chat interface.
   final LlmChatViewStyle chatStyle;
@@ -51,29 +51,29 @@ class InputButton extends StatelessWidget {
   final void Function() onStopRecording;
 
   @override
-  Widget build(BuildContext context) => switch (inputState) {
-    InputState.canSubmitPrompt => ActionButton(
-      style: chatStyle.submitButtonStyle!,
-      onPressed: onSubmitPrompt,
-    ),
-    InputState.canCancelPrompt => ActionButton(
-      style: chatStyle.stopButtonStyle!,
-      onPressed: onCancelPrompt,
-    ),
-    InputState.canStt => ActionButton(
-      style: chatStyle.recordButtonStyle!,
-      onPressed: onStartRecording,
-    ),
-    InputState.isRecording => ActionButton(
-      style: chatStyle.stopButtonStyle!,
-      onPressed: onStopRecording,
-    ),
-    InputState.canCancelStt => AdaptiveCircularProgressIndicator(
-      color: chatStyle.progressIndicatorColor!,
-    ),
-    InputState.disabled => ActionButton(
-      style: chatStyle.disabledButtonStyle!,
-      onPressed: () {},
-    ),
-  };
+  Widget build(BuildContext context) {
+    return Builder(
+      builder: (context) {
+        if (inputState == null) {
+          return ActionButton(style: chatStyle.disabledButtonStyle!, onPressed: () {});
+        } else {
+          switch (inputState!) {
+            case InputState.canSubmitPrompt:
+              return ActionButton(style: chatStyle.submitButtonStyle!, onPressed: onSubmitPrompt);
+
+            case InputState.canCancelPrompt:
+              return ActionButton(style: chatStyle.stopButtonStyle!, onPressed: onCancelPrompt);
+            case InputState.canStt:
+              return ActionButton(style: chatStyle.recordButtonStyle!, onPressed: onStartRecording);
+            case InputState.isRecording:
+              return ActionButton(style: chatStyle.stopButtonStyle!, onPressed: onStopRecording);
+            case InputState.canCancelStt:
+              return AdaptiveCircularProgressIndicator(color: chatStyle.progressIndicatorColor!);
+            case InputState.disabled:
+              return ActionButton(style: chatStyle.disabledButtonStyle!, onPressed: () {});
+          }
+        }
+      },
+    );
+  }
 }

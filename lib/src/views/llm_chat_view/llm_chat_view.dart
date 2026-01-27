@@ -261,7 +261,7 @@ class _LlmChatViewState extends State<LlmChatView>
                       onTapSuggestedPrompts: widget.onTapSuggestedPrompts,
                       // prefer the mutable copy (so we can clear it from state),
                       // fall back to the initial message.
-                      initialMessage: _initialSuggestedPromptMutable == null ? _initialMessage : _initialSuggestedPromptMutable,
+                      initialMessage: _initialSuggestedPromptMutable ?? _initialMessage,
                       autofocus:
                       widget.autofocus ??
                           widget.viewModel.suggestions.isEmpty,

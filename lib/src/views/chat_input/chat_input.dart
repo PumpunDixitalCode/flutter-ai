@@ -225,9 +225,8 @@ class _ChatInputState extends State<ChatInput> {
     ),
   );
 
-  InputState get _inputState {
-    print("!widget.enabled -- ${!widget.enabled}");
-    if (!widget.enabled) return InputState.disabled;
+  InputState? get _inputState {
+    if (!widget.enabled) return null;
 
     if (_waveController.isRecording) return InputState.isRecording;
     if (widget.onCancelMessage != null) return InputState.canCancelPrompt;

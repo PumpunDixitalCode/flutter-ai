@@ -34,7 +34,7 @@ class TextOrAudioInput extends StatelessWidget {
     required TextEditingController textController,
     required FocusNode focusNode,
     required bool autofocus,
-    required InputState inputState,
+    required InputState? inputState,
     required ActionButtonStyle cancelButtonStyle,
   }) : _cancelButtonStyle = cancelButtonStyle,
         _inputState = inputState,
@@ -55,7 +55,7 @@ class TextOrAudioInput extends StatelessWidget {
   final TextEditingController _textController;
   final FocusNode _focusNode;
   final bool _autofocus;
-  final InputState _inputState;
+  final InputState? _inputState;
   final ActionButtonStyle _cancelButtonStyle;
   static const _minInputHeight = 48.0;
   static const _maxInputHeight = 144.0;
@@ -115,7 +115,7 @@ class TextOrAudioInput extends StatelessWidget {
                 hintText: _inputStyle.hintText!,
                 hintStyle: _inputStyle.hintStyle!,
                 hintPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                enabled: _inputState != InputState.disabled,
+                enabled: _inputState != null,
               ),
             ),
           ),

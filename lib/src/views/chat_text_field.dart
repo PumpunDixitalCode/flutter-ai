@@ -4,7 +4,7 @@
 
 import 'package:flutter/cupertino.dart' show CupertinoTextField;
 import 'package:flutter/material.dart'
-    show InputBorder, InputDecoration, TextField, TextInputAction;
+    show InputBorder, InputDecoration, TextField, TextInputAction, OutlineInputBorder;
 import 'package:flutter/widgets.dart';
 
 import '../styles/toolkit_colors.dart';
@@ -101,7 +101,11 @@ class ChatTextField extends StatelessWidget {
         onSubmitted: onSubmitted,
         style: style,
         decoration: InputDecoration(
-          border: InputBorder.none,
+          fillColor: enabled ? null : Color(0X50AEAEAE),
+          border: enabled ? InputBorder.none : OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: ToolkitColors.transparent),
+          ),
           hintText: hintText,
           hintStyle: hintStyle,
           contentPadding: hintPadding,
