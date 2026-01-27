@@ -41,7 +41,7 @@ class ChatInput extends StatefulWidget {
     this.onCancelStt,
     this.autofocus = true,
     this.onTapSuggestedPrompts,
-    this.initialSuggestedPrompt,
+    required this.enabled,
     super.key,
   }) : assert(!(onCancelMessage != null && onCancelStt != null), 'Cannot be submitting a prompt and doing stt at the same time'),
         assert(!(onCancelEdit != null && initialMessage == null), 'Cannot cancel edit of a message if no initial message is provided');
@@ -80,7 +80,9 @@ class ChatInput extends StatefulWidget {
   /// Optional suggested prompts provided by the parent UI. The type is dynamic
   /// so host apps can pass either Strings or domain objects.
   final AsyncCallback? onTapSuggestedPrompts;
-  final ChatMessage? initialSuggestedPrompt;
+
+  /// Whether the input is enabled.
+  final bool enabled;
 
   @override
   State<ChatInput> createState() => _ChatInputState();
@@ -127,20 +129,9 @@ class _ChatInputState extends State<ChatInput> {
     _inputStyle = ChatInputStyle.resolve(_viewModel!.style?.chatInputStyle);
   }
 
-
   @override
   void didUpdateWidget(ChatInput oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    if (widget.initialSuggestedPrompt != oldWidget.initialSuggestedPrompt) {
-      final prompt = widget.initialSuggestedPrompt;
-      setState(() {
-        _textController.text = prompt?.text ?? '';
-        _attachments
-          ..clear()
-          ..addAll(prompt?.attachments ?? []);
-      });
-    }
     if (widget.initialMessage != null) {
       // Load the initial message's text and attachments when:
       // 1. Starting an edit operation (user clicked edit on a previous message)
@@ -190,7 +181,7 @@ class _ChatInputState extends State<ChatInput> {
                     : Container(
                   padding: const EdgeInsets.only(bottom: 14),
                   child: InkWell(
-                    onTap: widget.onTapSuggestedPrompts,
+                    onTap: _inputState == InputState.disabled ? null : widget.onTapSuggestedPrompts,
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
                       width: 38,
@@ -235,6 +226,9 @@ class _ChatInputState extends State<ChatInput> {
   );
 
   InputState get _inputState {
+    print("!widget.enabled -- ${!widget.enabled}");
+    if (!widget.enabled) return InputState.disabled;
+
     if (_waveController.isRecording) return InputState.isRecording;
     if (widget.onCancelMessage != null) return InputState.canCancelPrompt;
     if (widget.onCancelStt != null) return InputState.canCancelStt;

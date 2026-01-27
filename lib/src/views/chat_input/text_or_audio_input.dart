@@ -37,15 +37,15 @@ class TextOrAudioInput extends StatelessWidget {
     required InputState inputState,
     required ActionButtonStyle cancelButtonStyle,
   }) : _cancelButtonStyle = cancelButtonStyle,
-       _inputState = inputState,
-       _autofocus = autofocus,
-       _focusNode = focusNode,
-       _textController = textController,
-       _onSubmitPrompt = onSubmitPrompt,
-       _onRecordingStopped = onRecordingStopped,
-       _onCancelEdit = onCancelEdit,
-       _waveController = waveController,
-       _inputStyle = inputStyle;
+        _inputState = inputState,
+        _autofocus = autofocus,
+        _focusNode = focusNode,
+        _textController = textController,
+        _onSubmitPrompt = onSubmitPrompt,
+        _onRecordingStopped = onRecordingStopped,
+        _onCancelEdit = onCancelEdit,
+        _waveController = waveController,
+        _inputStyle = inputStyle;
 
   final ChatInputStyle _inputStyle;
   final WaveformRecorderController _waveController;
@@ -70,62 +70,63 @@ class TextOrAudioInput extends StatelessWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: _minInputHeight, maxHeight: _maxInputHeight),
             child:
-                _waveController.isRecording
-                    ? WaveformRecorder(
-                      controller: _waveController,
-                      height: _minInputHeight,
-                      onRecordingStopped: _onRecordingStopped,
-                    )
-                    : Focus(
-                      onKeyEvent: (node, event) {
-                        // Solo manejar eventos de tecla presionada
-                        if (event is! KeyDownEvent) {
-                          return KeyEventResult.ignored;
-                        }
+            _waveController.isRecording
+                ? WaveformRecorder(
+              controller: _waveController,
+              height: _minInputHeight,
+              onRecordingStopped: _onRecordingStopped,
+            )
+                : Focus(
+              onKeyEvent: (node, event) {
+                // Solo manejar eventos de tecla presionada
+                if (event is! KeyDownEvent) {
+                  return KeyEventResult.ignored;
+                }
 
-                        // Detectar si Shift está presionado
-                        final isShiftPressed =
-                            HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.shiftLeft) ||
-                            HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.shiftRight);
+                // Detectar si Shift está presionado
+                final isShiftPressed =
+                    HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.shiftLeft) ||
+                        HardwareKeyboard.instance.logicalKeysPressed.contains(LogicalKeyboardKey.shiftRight);
 
-                        // Si es Enter y Shift está presionado, ignorar para permitir salto de línea
-                        if (event.logicalKey == LogicalKeyboardKey.enter && isShiftPressed) {
-                          return KeyEventResult.ignored;
-                        }
+                // Si es Enter y Shift está presionado, ignorar para permitir salto de línea
+                if (event.logicalKey == LogicalKeyboardKey.enter && isShiftPressed) {
+                  return KeyEventResult.ignored;
+                }
 
-                        // Si es Enter sin Shift y puede enviar, enviar el prompt
-                        if (event.logicalKey == LogicalKeyboardKey.enter &&
-                            !isShiftPressed &&
-                            _inputState == InputState.canSubmitPrompt) {
-                          _onSubmitPrompt();
-                          return KeyEventResult.handled;
-                        }
+                // Si es Enter sin Shift y puede enviar, enviar el prompt
+                if (event.logicalKey == LogicalKeyboardKey.enter &&
+                    !isShiftPressed &&
+                    _inputState == InputState.canSubmitPrompt) {
+                  _onSubmitPrompt();
+                  return KeyEventResult.handled;
+                }
 
-                        return KeyEventResult.ignored;
-                      },
-                      child: ChatTextField(
-                        minLines: 1,
-                        maxLines: 1024,
-                        controller: _textController,
-                        autofocus: _autofocus,
-                        focusNode: _focusNode,
-                        textInputAction: TextInputAction.newline,
-                        onSubmitted: (_) => _focusNode.requestFocus(),
-                        style: _inputStyle.textStyle!,
-                        hintText: _inputStyle.hintText!,
-                        hintStyle: _inputStyle.hintStyle!,
-                        hintPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      ),
-                    ),
+                return KeyEventResult.ignored;
+              },
+              child: ChatTextField(
+                minLines: 1,
+                maxLines: 1024,
+                controller: _textController,
+                autofocus: _autofocus,
+                focusNode: _focusNode,
+                textInputAction: TextInputAction.newline,
+                onSubmitted: (_) => _focusNode.requestFocus(),
+                style: _inputStyle.textStyle!,
+                hintText: _inputStyle.hintText!,
+                hintStyle: _inputStyle.hintStyle!,
+                hintPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                enabled: _inputState != InputState.disabled,
+              ),
+            ),
           ),
         ),
       ),
       Align(
         alignment: Alignment.topRight,
         child:
-            _onCancelEdit != null
-                ? EditingIndicator(onCancelEdit: _onCancelEdit, cancelButtonStyle: _cancelButtonStyle)
-                : const SizedBox(),
+        _onCancelEdit != null
+            ? EditingIndicator(onCancelEdit: _onCancelEdit, cancelButtonStyle: _cancelButtonStyle)
+            : const SizedBox(),
       ),
     ],
   );
