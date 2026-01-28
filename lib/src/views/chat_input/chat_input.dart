@@ -181,7 +181,7 @@ class _ChatInputState extends State<ChatInput> {
                     : Container(
                   padding: const EdgeInsets.only(bottom: 14),
                   child: InkWell(
-                    onTap: _inputState == InputState.disabled ? null : widget.onTapSuggestedPrompts,
+                    onTap: _inputState == null ? null : widget.onTapSuggestedPrompts,
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
                       width: 38,
