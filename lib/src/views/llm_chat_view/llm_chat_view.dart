@@ -7,7 +7,6 @@ import 'dart:async';
 import 'package:cross_file/cross_file.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // For clipboard if not already imported
 
 import '../../chat_view_model/chat_view_model.dart';
 import '../../chat_view_model/chat_view_model_provider.dart';
@@ -168,12 +167,14 @@ class LlmChatView extends StatefulWidget {
   /// will be focused automatically.
   final bool? autofocus;
 
+  /// The callback invoked when the user taps on suggested prompts.
   final AsyncCallback? onTapSuggestedPrompts;
 
-  // `ChangeMessage` type did not exist in the package. Use the existing
-  // `ChatMessage` type (imported above) for the initial suggested prompt.
+  /// `ChangeMessage` type did not exist in the package. Use the existing
+  /// `ChatMessage` type (imported above) for the initial suggested prompt.
   final ChatMessage? initialSuggestedPrompt;
 
+  /// Whether the chat view is enabled.
   final bool enabled;
 
   @override

@@ -98,7 +98,7 @@ class _ChatHistoryViewState extends State<ChatHistoryView> {
                 message,
                 onEdit:
                 canEdit
-                    ? () => widget.onEditMessage?.call(message)
+                    ? (dynamic _) => widget.onEditMessage?.call(message)
                     : null,
               )
                   : LlmMessageView(

@@ -29,7 +29,7 @@ class UserMessageView extends StatelessWidget {
   final ChatMessage message;
 
   /// The callback to be invoked when the message is edited.
-  final VoidCallback? onEdit;
+  final Function(dynamic)? onEdit;
 
   @override
   Widget build(BuildContext context) => Column(

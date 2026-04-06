@@ -76,6 +76,7 @@ class ChatMessage {
   /// Any attachments associated with the message.
   final Iterable<Attachment> attachments;
 
+  /// Unique identifier for the message.
   final int id;
 
   /// Appends additional text to the existing message content.

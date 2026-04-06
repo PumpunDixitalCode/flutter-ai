@@ -2,7 +2,7 @@ name: flutter_ai_toolkit
 description: >-
   A set of AI chat-related widgets for Flutter apps targeting
   mobile, desktop, and web.
-version: 0.9.2
+version: 1.0.0
 repository: https://github.com/flutter/ai
 
 topics:
@@ -15,21 +15,21 @@ environment:
   flutter: '>=3.27.0'
 
 dependencies:
-  cross_file: ^0.3.4+2
+  cross_file: ^0.3.5+2
   delayed_display: ^2.0.0
-  file_selector: ^1.0.3
-  firebase_ai: ^2.0.0
+  file_selector: ^1.1.0
+  firebase_ai: ^3.10.0
   flutter:
     sdk: flutter
-  flutter_context_menu: ^0.2.0
-  flutter_markdown_plus: ^1.0.3
+  flutter_context_menu: ^0.4.2
+  flutter_markdown_plus: ^1.0.7
   flutter_picture_taker: ^0.2.0
-  google_fonts: ^6.2.1
-  image_picker: ^1.1.2
+  google_fonts: ^8.0.2
+  image_picker: ^1.2.1
   mime: ^2.0.0
   universal_platform: ^1.1.0
-  uuid: ^4.4.2
-  waveform_recorder: ^1.3.0
+  uuid: ^4.5.3
+  waveform_recorder: ^1.8.0
 
 dev_dependencies:
   flutter_lints: ^6.0.0
