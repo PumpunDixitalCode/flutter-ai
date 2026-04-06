@@ -69,6 +69,7 @@ class ChatTextField extends StatelessWidget {
   /// Called when the user submits editable content.
   final void Function(String text) onSubmitted;
 
+  /// Whether the text field is enabled.
   final bool enabled;
 
   @override

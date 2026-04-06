@@ -41,7 +41,7 @@ class AdaptiveCopyText extends StatelessWidget {
   final Widget child;
 
   /// The callback to be invoked when the text is edited.
-  final VoidCallback? onEdit;
+  final Function(dynamic)? onEdit;
 
   /// The style information for the chat.
   final LlmChatViewStyle chatStyle;
@@ -52,14 +52,14 @@ class AdaptiveCopyText extends StatelessWidget {
       entries: [
         if (onEdit != null)
           MenuItem(
-            label: 'Edit',
-            icon: chatStyle.editButtonStyle!.icon,
+            label: Text('Edit'),
+            icon: Icon(chatStyle.editButtonStyle!.icon),
             onSelected: onEdit,
           ),
         MenuItem(
-          label: 'Copy',
-          icon: chatStyle.copyButtonStyle!.icon,
-          onSelected: () => unawaited(copyToClipboard(context, clipboardText)),
+          label: Text('Copy'),
+          icon: Icon(chatStyle.copyButtonStyle!.icon),
+          onSelected: (dynamic _) => unawaited(copyToClipboard(context, clipboardText)),
         ),
       ],
     );

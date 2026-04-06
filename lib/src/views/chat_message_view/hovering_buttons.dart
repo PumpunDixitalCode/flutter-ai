@@ -46,7 +46,7 @@ class HoveringButtons extends StatefulWidget {
   final Widget child;
 
   /// The callback to be invoked when the edit button is pressed.
-  final VoidCallback? onEdit;
+  final Function(dynamic)? onEdit;
 
   /// The callback invoked when user provides feedback on the message.
   /// Only used for !isUserMessage.
@@ -55,6 +55,7 @@ class HoveringButtons extends StatefulWidget {
   /// The ID of the message for feedback.
   final int? messageId;
 
+  /// The text of the message for feedback.
   final String? messageText;
 
   final _hovering = ValueNotifier(true);
