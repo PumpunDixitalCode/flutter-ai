@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 import '../../chat_view_model/chat_view_model_client.dart';
@@ -21,11 +22,11 @@ class LlmMessageView extends StatelessWidget {
   /// The [message] parameter is required and represents the LLM chat message to
   /// be displayed.
   const LlmMessageView(
-      this.message, {
-        this.isWelcomeMessage = false,
-        this.onFeedback, // Added for feedback callback
-        super.key,
-      });
+    this.message, {
+    this.isWelcomeMessage = false,
+    this.onFeedback, // Added for feedback callback
+    super.key,
+  });
 
   /// The LLM chat message to be displayed.
   final ChatMessage message;
@@ -47,24 +48,13 @@ class LlmMessageView extends StatelessWidget {
               builder: (context, viewModel, child) {
                 final text = message.text;
                 final chatStyle = LlmChatViewStyle.resolve(viewModel.style);
-                final llmStyle = LlmMessageStyle.resolve(
-                  chatStyle.llmMessageStyle,
-                );
+                final llmStyle = LlmMessageStyle.resolve(chatStyle.llmMessageStyle);
 
                 return Stack(
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(top: 10),
-                      child: Container(
-                        height: 20,
-                        width: 20,
-                        decoration: llmStyle.iconDecoration,
-                        child: Icon(
-                          llmStyle.icon,
-                          color: llmStyle.iconColor,
-                          size: 12,
-                        ),
-                      ),
+                      child: Container(height: 20, width: 20, decoration: llmStyle.iconDecoration, child: Icon(llmStyle.icon, color: llmStyle.iconColor, size: 12)),
                     ),
                     HoveringButtons(
                       isUserMessage: false,
@@ -78,30 +68,29 @@ class LlmMessageView extends StatelessWidget {
                         margin: const EdgeInsets.only(left: 28),
                         padding: const EdgeInsets.all(8),
                         child:
-                        text == null
-                            ? SizedBox(
-                          width: 32,
-                          child: JumpingDotsProgressIndicator(
-                            fontSize: 24,
-                            color: chatStyle.progressIndicatorColor!,
-                          ),
-                        )
-                            : AdaptiveCopyText(
-                          clipboardText: text,
-                          chatStyle: chatStyle,
-                          child:
-                          isWelcomeMessage ||
-                              viewModel.responseBuilder == null
-                              ? MarkdownBody(
-                            data: text,
-                            selectable: false,
-                            styleSheet: llmStyle.markdownStyle,
-                          )
-                              : viewModel.responseBuilder!(
-                            context,
-                            text,
-                          ),
-                        ),
+                            text == null
+                                ? SizedBox(width: 32, child: JumpingDotsProgressIndicator(fontSize: 24, color: chatStyle.progressIndicatorColor!))
+                                : AdaptiveCopyText(
+                                  clipboardText: text,
+                                  chatStyle: chatStyle,
+                                  child:
+                                      isWelcomeMessage || viewModel.responseBuilder == null
+                                          ? isWelcomeMessage
+                                              ? Html(
+                                                data: text.replaceAll('\n', '<br>'),
+                                                style: {
+                                                  "body": Style(
+                                                    margin: Margins.zero,
+                                                    padding: HtmlPaddings.zero,
+                                                    fontSize: llmStyle.markdownStyle?.p?.fontSize != null ? FontSize(llmStyle.markdownStyle!.p!.fontSize!) : null,
+                                                    color: llmStyle.markdownStyle?.p?.color,
+                                                  ),
+                                                  "b": Style(fontWeight: FontWeight.bold),
+                                                },
+                                              )
+                                              : MarkdownBody(data: text, selectable: false, styleSheet: llmStyle.markdownStyle)
+                                          : viewModel.responseBuilder!(context, text),
+                                ),
                       ),
                     ),
                   ],

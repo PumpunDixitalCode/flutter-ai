@@ -97,15 +97,15 @@ class ChatViewModel {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is ChatViewModel &&
-          other.provider == provider &&
-          other.style == style &&
-          other.suggestions == suggestions &&
-          other.welcomeMessage == welcomeMessage &&
-          other.responseBuilder == responseBuilder &&
-          other.messageSender == messageSender &&
-          other.enableAttachments == enableAttachments &&
-          other.enableVoiceNotes == enableVoiceNotes);
+          (other is ChatViewModel &&
+              other.provider == provider &&
+              other.style == style &&
+              other.suggestions == suggestions &&
+              other.welcomeMessage == welcomeMessage &&
+              other.responseBuilder == responseBuilder &&
+              other.messageSender == messageSender &&
+              other.enableAttachments == enableAttachments &&
+              other.enableVoiceNotes == enableVoiceNotes);
 
   // the following is best practices when overriding operator ==
   @override

@@ -104,16 +104,16 @@ class LlmChatView extends StatefulWidget {
     this.enabled = true,
     super.key,
   }) : viewModel = ChatViewModel(
-    provider: provider,
-    responseBuilder: responseBuilder,
-    messageSender: messageSender,
-    speechToText: speechToText,
-    style: style,
-    suggestions: suggestions,
-    welcomeMessage: welcomeMessage,
-    enableAttachments: enableAttachments,
-    enableVoiceNotes: enableVoiceNotes,
-  );
+         provider: provider,
+         responseBuilder: responseBuilder,
+         messageSender: messageSender,
+         speechToText: speechToText,
+         style: style,
+         suggestions: suggestions,
+         welcomeMessage: welcomeMessage,
+         enableAttachments: enableAttachments,
+         enableVoiceNotes: enableVoiceNotes,
+       );
 
   /// Whether to enable file and image attachments in the chat input.
   ///
@@ -142,8 +142,7 @@ class LlmChatView extends StatefulWidget {
   /// The action to perform when an error occurs during a chat operation.
   ///
   /// By default, an alert dialog is displayed with the error message.
-  final void Function(BuildContext context, LlmException error)?
-  onErrorCallback;
+  final void Function(BuildContext context, LlmException error)? onErrorCallback;
 
   /// The callback invoked when user provides feedback (like/dislike) on an LLM message.
   ///
@@ -181,8 +180,7 @@ class LlmChatView extends StatefulWidget {
   State<LlmChatView> createState() => _LlmChatViewState();
 }
 
-class _LlmChatViewState extends State<LlmChatView>
-    with AutomaticKeepAliveClientMixin {
+class _LlmChatViewState extends State<LlmChatView> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -190,6 +188,7 @@ class _LlmChatViewState extends State<LlmChatView>
   ChatMessage? _initialMessage;
   ChatMessage? _associatedResponse;
   LlmResponse? _pendingSttResponse;
+
   // Mutable copy of the widget-provided initial suggested prompt so the
   // State can clear/modify it without attempting to set a final field on
   // the widget instance.
@@ -229,8 +228,7 @@ class _LlmChatViewState extends State<LlmChatView>
     return ListenableBuilder(
       listenable: widget.viewModel.provider,
       builder:
-          (context, child) =>
-          ChatViewModelProvider(
+          (context, child) => ChatViewModelProvider(
             viewModel: widget.viewModel,
             child: GestureDetector(
               onTap: () {
@@ -247,11 +245,7 @@ class _LlmChatViewState extends State<LlmChatView>
                           ChatHistoryView(
                             // can only edit if we're not waiting on the LLM or if
                             // we're not already editing an LLM response
-                            onEditMessage:
-                            _pendingPromptResponse == null &&
-                                _associatedResponse == null
-                                ? _onEditMessage
-                                : null,
+                            onEditMessage: _pendingPromptResponse == null && _associatedResponse == null ? _onEditMessage : null,
                             onSelectSuggestion: _onSelectSuggestion,
                             onFeedback: widget.onFeedback, // Pass feedback callback down
                           ),
@@ -263,19 +257,12 @@ class _LlmChatViewState extends State<LlmChatView>
                       // prefer the mutable copy (so we can clear it from state),
                       // fall back to the initial message.
                       initialMessage: _initialSuggestedPromptMutable ?? _initialMessage,
-                      autofocus:
-                      widget.autofocus ??
-                          widget.viewModel.suggestions.isEmpty,
-                      onCancelEdit:
-                      _associatedResponse != null ? _onCancelEdit : null,
+                      autofocus: widget.autofocus ?? widget.viewModel.suggestions.isEmpty,
+                      onCancelEdit: _associatedResponse != null ? _onCancelEdit : null,
                       onSendMessage: _onSendMessage,
-                      onCancelMessage:
-                      _pendingPromptResponse == null
-                          ? null
-                          : _onCancelMessage,
+                      onCancelMessage: _pendingPromptResponse == null ? null : _onCancelMessage,
                       onTranslateStt: _onTranslateStt,
-                      onCancelStt:
-                      _pendingSttResponse == null ? null : _onCancelStt,
+                      onCancelStt: _pendingSttResponse == null ? null : _onCancelStt,
                       enabled: widget.enabled,
                     ),
                   ],
@@ -286,8 +273,7 @@ class _LlmChatViewState extends State<LlmChatView>
     );
   }
 
-  Future<void> _onSendMessage(String prompt,
-      Iterable<Attachment> attachments,) async {
+  Future<void> _onSendMessage(String prompt, Iterable<Attachment> attachments) async {
     // clear the mutable initial suggested prompt (do not attempt to assign
     // to the widget's final field)
     _initialSuggestedPromptMutable = null;
@@ -295,9 +281,7 @@ class _LlmChatViewState extends State<LlmChatView>
     _associatedResponse = null;
 
     // check the viewmodel for a user-provided message sender to use instead
-    final sendMessageStream =
-        widget.viewModel.messageSender ??
-            widget.viewModel.provider.sendMessageStream;
+    final sendMessageStream = widget.viewModel.messageSender ?? widget.viewModel.provider.sendMessageStream;
 
     _pendingPromptResponse = LlmResponse(
       stream: sendMessageStream(prompt, attachments: attachments),
@@ -340,8 +324,7 @@ class _LlmChatViewState extends State<LlmChatView>
     });
   }
 
-  Future<void> _onTranslateStt(XFile file,
-      Iterable<Attachment> currentAttachments,) async {
+  Future<void> _onTranslateStt(XFile file, Iterable<Attachment> currentAttachments) async {
     assert(widget.enableVoiceNotes);
     _initialSuggestedPromptMutable = null;
     _initialMessage = null;
@@ -349,18 +332,9 @@ class _LlmChatViewState extends State<LlmChatView>
 
     final response = StringBuffer();
     _pendingSttResponse = LlmResponse(
-      stream:
-      widget.viewModel.speechToText?.call(file) ??
-          _convertSpeechToText(file),
+      stream: widget.viewModel.speechToText?.call(file) ?? _convertSpeechToText(file),
       onUpdate: (text) => response.write(text),
-      onDone:
-          (error) async =>
-          _onSttDone(
-            error,
-            response.toString().trim(),
-            file,
-            currentAttachments,
-          ),
+      onDone: (error) async => _onSttDone(error, response.toString().trim(), file, currentAttachments),
     );
 
     setState(() {});
@@ -375,16 +349,10 @@ class _LlmChatViewState extends State<LlmChatView>
         'provide the result of translating the foreground audio.';
     final attachments = [await FileAttachment.fromFile(file)];
 
-    yield* widget.viewModel.provider.generateStream(
-      prompt,
-      attachments: attachments,
-    );
+    yield* widget.viewModel.provider.generateStream(prompt, attachments: attachments);
   }
 
-  Future<void> _onSttDone(LlmException? error,
-      String response,
-      XFile file,
-      Iterable<Attachment> attachments,) async {
+  Future<void> _onSttDone(LlmException? error, String response, XFile file, Iterable<Attachment> attachments) async {
     assert(_pendingSttResponse != null);
     setState(() {
       // Preserve any existing attachments from the current input
@@ -410,11 +378,7 @@ class _LlmChatViewState extends State<LlmChatView>
     // empty LLM message.
     final llmMessage = widget.viewModel.provider.history.last;
     if (llmMessage.text == null) {
-      llmMessage.append(
-        error is LlmCancelException
-            ? widget.cancelMessage
-            : widget.errorMessage,
-      );
+      llmMessage.append(error is LlmCancelException ? widget.cancelMessage : widget.errorMessage);
     }
 
     switch (error) {
@@ -430,23 +394,17 @@ class _LlmChatViewState extends State<LlmChatView>
         if (widget.onErrorCallback != null) {
           widget.onErrorCallback!(context, error);
         } else {
-          await AdaptiveAlertDialog.show(
-            context: context,
-            content: Text(error.toString()),
-            showOK: true,
-          );
+          await AdaptiveAlertDialog.show(context: context, content: Text(error.toString()), showOK: true);
         }
     }
   }
 
-  void _onSelectSuggestion(String suggestion) =>
-      setState(() => _initialMessage = ChatMessage.user(suggestion, []));
+  void _onSelectSuggestion(String suggestion) => setState(() => _initialMessage = ChatMessage.user(suggestion, []));
 
   void _onHistoryChanged() {
     // if the history is cleared, clear the initial message
     if (widget.viewModel.provider.history.isEmpty) {
       setState(() {
-
         _initialMessage = null;
         _associatedResponse = null;
       });
